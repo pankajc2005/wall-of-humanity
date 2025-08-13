@@ -1,0 +1,7 @@
+/* Optional: extra styling for your map or headers */
+body {
+  background-color: #f0f2f5;
+}
+header h1 {
+  font-size: 24px;
+}
