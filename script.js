@@ -31,6 +31,28 @@ async function displayWalls() {
 // Call displayWalls after definition
 displayWalls();
 
+// Let user select location on map
+let selectedMarker = null;
+map.on('click', (e) => {
+  const { lat, lng } = e.latlng;
+
+  // Fill form inputs
+  document.getElementById('wall-lat').value = lat.toFixed(6);
+  document.getElementById('wall-lng').value = lng.toFixed(6);
+
+  // Add or move marker on map
+  if (selectedMarker) {
+    selectedMarker.setLatLng([lat, lng]);
+  } else {
+    selectedMarker = L.marker([lat, lng], { draggable: true }).addTo(map);
+    selectedMarker.on('dragend', function(event) {
+      const pos = event.target.getLatLng();
+      document.getElementById('wall-lat').value = pos.lat.toFixed(6);
+      document.getElementById('wall-lng').value = pos.lng.toFixed(6);
+    });
+  }
+});
+
 // Form submission
 const submitButton = document.getElementById('submit-wall');
 const messageEl = document.getElementById('form-message');
@@ -68,7 +90,7 @@ submitButton.addEventListener('click', async () => {
     messageEl.textContent = 'Wall submitted successfully! Pending approval.';
     messageEl.style.color = 'green';
 
-    // Optionally, reset form
+    // Reset form
     document.getElementById('wall-name').value = '';
     document.getElementById('wall-address').value = '';
     document.getElementById('wall-city').value = '';
@@ -77,6 +99,12 @@ submitButton.addEventListener('click', async () => {
     document.getElementById('contributor-name').value = '';
     document.getElementById('contributor-social').value = '';
     document.getElementById('anonymous').checked = false;
+
+    // Remove selected marker
+    if (selectedMarker) {
+      map.removeLayer(selectedMarker);
+      selectedMarker = null;
+    }
 
   } catch (err) {
     console.error("Error adding wall:", err);
