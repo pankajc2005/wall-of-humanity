@@ -1,4 +1,5 @@
-import { getWalls } from './firebase.js';
+// script.js
+import { getWalls, addWall } from './firebase.js';
 
 // Initialize Leaflet map centered on India
 const map = L.map('map').setView([20.5937, 78.9629], 5);
@@ -8,65 +9,74 @@ L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
   attribution: '&copy; OpenStreetMap contributors'
 }).addTo(map);
 
-// Fetch approved walls from Firebase
-async function loadWalls() {
+// Function to load and display walls
+async function displayWalls() {
   try {
-    const wallsRef = collection(db, "walls");
-    const q = query(wallsRef, where("status", "==", "approved"));
-    const snapshot = await getDocs(q);
+    // Clear existing markers
+    map.eachLayer(layer => {
+      if (layer instanceof L.Marker) map.removeLayer(layer);
+    });
 
-    snapshot.forEach(doc => {
-      const wall = doc.data();
+    const walls = await getWalls();
+    walls.forEach(wall => {
       L.marker([wall.lat, wall.lng])
         .addTo(map)
-        .bindPopup(`
-          <b>${wall.name}</b><br>
-          ${wall.address || ""}, ${wall.city || ""}<br>
-          Submitted by: ${wall.contributorName || "Anonymous"}<br>
-          ${wall.contributorSocial ? `Social: <a href="${wall.contributorSocial}" target="_blank">${wall.contributorSocial}</a>` : ""}
-        `);
+        .bindPopup(`<b>${wall.name}</b><br>${wall.city}`);
     });
   } catch (err) {
     console.error("Error loading walls from Firebase:", err);
   }
 }
 
-loadWalls();
+// Initial load
+displayWalls();
 
-// Handle submission
-document.getElementById("submit-wall").addEventListener("click", async () => {
-  const name = document.getElementById("wall-name").value;
-  const address = document.getElementById("wall-address").value;
-  const city = document.getElementById("wall-city").value;
-  const lat = parseFloat(document.getElementById("wall-lat").value);
-  const lng = parseFloat(document.getElementById("wall-lng").value);
-  const anonymous = document.getElementById("anonymous").checked;
+// Handle form submission
+document.getElementById('submit-wall').addEventListener('click', async () => {
+  const nameInput = document.getElementById('wall-name');
+  const addressInput = document.getElementById('wall-address');
+  const cityInput = document.getElementById('wall-city');
+  const latInput = document.getElementById('wall-lat');
+  const lngInput = document.getElementById('wall-lng');
+  const contributorInput = document.getElementById('contributor-name');
+  const socialInput = document.getElementById('contributor-social');
+  const anonymousCheckbox = document.getElementById('anonymous');
+  const messageEl = document.getElementById('form-message');
 
-  let contributorName = anonymous ? "Anonymous" : document.getElementById("contributor-name").value || "Anonymous";
-  let contributorSocial = anonymous ? "" : document.getElementById("contributor-social").value || "";
-
-  if (!name || !lat || !lng) {
-    document.getElementById("form-message").innerText = "Name, latitude, and longitude are required!";
+  // Validate required fields
+  if (!nameInput.value || !latInput.value || !lngInput.value) {
+    messageEl.textContent = "Please fill in required fields: Name, Latitude, Longitude.";
     return;
   }
 
+  // Prepare wall data
+  const wallData = {
+    name: nameInput.value,
+    address: addressInput.value || "",
+    city: cityInput.value || "",
+    lat: parseFloat(latInput.value),
+    lng: parseFloat(lngInput.value),
+    contributor: anonymousCheckbox.checked ? "Anonymous" : (contributorInput.value || "Anonymous"),
+    social: anonymousCheckbox.checked ? "" : (socialInput.value || ""),
+  };
+
   try {
-    await addDoc(collection(db, "walls"), {
-      name,
-      address,
-      city,
-      lat,
-      lng,
-      contributorName,
-      contributorSocial,
-      status: "pending", // admin approval required
-      createdAt: new Date()
-    });
-    document.getElementById("form-message").innerText = "Wall submitted! Waiting for approval.";
-  } catch (error) {
-    console.error("Error adding wall:", error);
-    document.getElementById("form-message").innerText = "Error submitting wall.";
+    await addWall(wallData);
+    messageEl.textContent = "Wall submitted successfully! Pending admin approval.";
+
+    // Clear form
+    nameInput.value = "";
+    addressInput.value = "";
+    cityInput.value = "";
+    latInput.value = "";
+    lngInput.value = "";
+    contributorInput.value = "";
+    socialInput.value = "";
+    anonymousCheckbox.checked = false;
+
+    // Refresh map (only approved walls will show)
+    displayWalls();
+  } catch (err) {
+    messageEl.textContent = "Error submitting wall. Check console for details.";
   }
 });
-
-displayWalls();
