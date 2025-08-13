@@ -16,6 +16,25 @@
   </header>
   <div id="map"></div>
 
+  <div id="submission-form" style="padding: 10px;">
+  <h2>Submit a New Wall</h2>
+  <input type="text" id="wall-name" placeholder="Wall Name" required><br>
+  <input type="text" id="wall-address" placeholder="Address"><br>
+  <input type="text" id="wall-city" placeholder="City"><br>
+  <input type="number" id="wall-lat" placeholder="Latitude" step="any" required><br>
+  <input type="number" id="wall-lng" placeholder="Longitude" step="any" required><br>
+  
+  <input type="text" id="contributor-name" placeholder="Your Name"><br>
+  <input type="text" id="contributor-social" placeholder="Instagram/Other handle"><br>
+  <label>
+    <input type="checkbox" id="anonymous"> Submit Anonymously
+  </label><br>
+  
+  <button id="submit-wall">Submit Wall</button>
+  <p id="form-message"></p>
+</div>
+
+
   <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
   <!-- Firebase + App JS -->
   <script type="module" src="script.js"></script>
