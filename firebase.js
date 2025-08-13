@@ -19,29 +19,13 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-// --- Fetch approved walls ---
 export async function getWalls() {
   const wallsCol = collection(db, "walls");
-  const wallSnapshot = await getDocs(wallsCol);
-  const wallList = wallSnapshot.docs.map(doc => doc.data());
-  // Only show walls with status = "approved"
-  return wallList.filter(w => w.status === "approved");
+  const snapshot = await getDocs(wallsCol);
+  return snapshot.docs.map(doc => doc.data()).filter(w => w.status === "approved");
 }
 
-// --- Add a new wall ---
-export async function addWall(wall) {
-  try {
-    const wallsCol = collection(db, "walls");
-    // Add extra fields like timestamp and default status
-    const newWall = {
-      ...wall,
-      status: "pending", // admins can approve later
-      createdAt: serverTimestamp()
-    };
-    await addDoc(wallsCol, newWall);
-    console.log("Wall added successfully!");
-  } catch (err) {
-    console.error("Error adding wall:", err);
-    throw err; // so calling code can handle errors
-  }
+export async function addWall(data) {
+  const wallsCol = collection(db, "walls");
+  await addDoc(wallsCol, { ...data, status: "pending", timestamp: serverTimestamp() });
 }

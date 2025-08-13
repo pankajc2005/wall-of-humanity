@@ -9,74 +9,78 @@ L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
   attribution: '&copy; OpenStreetMap contributors'
 }).addTo(map);
 
-// Function to load and display walls
+// Display walls on the map
 async function displayWalls() {
   try {
-    // Clear existing markers
-    map.eachLayer(layer => {
-      if (layer instanceof L.Marker) map.removeLayer(layer);
-    });
-
     const walls = await getWalls();
     walls.forEach(wall => {
       L.marker([wall.lat, wall.lng])
         .addTo(map)
-        .bindPopup(`<b>${wall.name}</b><br>${wall.city}`);
+        .bindPopup(`
+          <b>${wall.name}</b><br>
+          ${wall.address || ''}, ${wall.city || ''}<br>
+          Submitted by: ${wall.anonymous ? 'Anonymous' : wall.contributorName || 'N/A'}<br>
+          ${wall.contributorSocial ? 'Social: ' + wall.contributorSocial : ''}
+        `);
     });
   } catch (err) {
     console.error("Error loading walls from Firebase:", err);
   }
 }
 
-// Initial load
+// Call displayWalls after definition
 displayWalls();
 
-// Handle form submission
-document.getElementById('submit-wall').addEventListener('click', async () => {
-  const nameInput = document.getElementById('wall-name');
-  const addressInput = document.getElementById('wall-address');
-  const cityInput = document.getElementById('wall-city');
-  const latInput = document.getElementById('wall-lat');
-  const lngInput = document.getElementById('wall-lng');
-  const contributorInput = document.getElementById('contributor-name');
-  const socialInput = document.getElementById('contributor-social');
-  const anonymousCheckbox = document.getElementById('anonymous');
-  const messageEl = document.getElementById('form-message');
+// Form submission
+const submitButton = document.getElementById('submit-wall');
+const messageEl = document.getElementById('form-message');
 
-  // Validate required fields
-  if (!nameInput.value || !latInput.value || !lngInput.value) {
-    messageEl.textContent = "Please fill in required fields: Name, Latitude, Longitude.";
+submitButton.addEventListener('click', async () => {
+  const name = document.getElementById('wall-name').value.trim();
+  const address = document.getElementById('wall-address').value.trim();
+  const city = document.getElementById('wall-city').value.trim();
+  const lat = parseFloat(document.getElementById('wall-lat').value);
+  const lng = parseFloat(document.getElementById('wall-lng').value);
+  const contributorName = document.getElementById('contributor-name').value.trim();
+  const contributorSocial = document.getElementById('contributor-social').value.trim();
+  const anonymous = document.getElementById('anonymous').checked;
+
+  if (!name || isNaN(lat) || isNaN(lng)) {
+    messageEl.textContent = 'Please fill in required fields (Name, Latitude, Longitude).';
+    messageEl.style.color = 'red';
     return;
   }
 
-  // Prepare wall data
   const wallData = {
-    name: nameInput.value,
-    address: addressInput.value || "",
-    city: cityInput.value || "",
-    lat: parseFloat(latInput.value),
-    lng: parseFloat(lngInput.value),
-    contributor: anonymousCheckbox.checked ? "Anonymous" : (contributorInput.value || "Anonymous"),
-    social: anonymousCheckbox.checked ? "" : (socialInput.value || ""),
+    name,
+    address,
+    city,
+    lat,
+    lng,
+    anonymous,
+    contributorName: anonymous ? null : contributorName || 'N/A',
+    contributorSocial: anonymous ? null : contributorSocial || null,
+    status: 'pending' // new submissions are pending approval
   };
 
   try {
     await addWall(wallData);
-    messageEl.textContent = "Wall submitted successfully! Pending admin approval.";
+    messageEl.textContent = 'Wall submitted successfully! Pending approval.';
+    messageEl.style.color = 'green';
 
-    // Clear form
-    nameInput.value = "";
-    addressInput.value = "";
-    cityInput.value = "";
-    latInput.value = "";
-    lngInput.value = "";
-    contributorInput.value = "";
-    socialInput.value = "";
-    anonymousCheckbox.checked = false;
+    // Optionally, reset form
+    document.getElementById('wall-name').value = '';
+    document.getElementById('wall-address').value = '';
+    document.getElementById('wall-city').value = '';
+    document.getElementById('wall-lat').value = '';
+    document.getElementById('wall-lng').value = '';
+    document.getElementById('contributor-name').value = '';
+    document.getElementById('contributor-social').value = '';
+    document.getElementById('anonymous').checked = false;
 
-    // Refresh map (only approved walls will show)
-    displayWalls();
   } catch (err) {
-    messageEl.textContent = "Error submitting wall. Check console for details.";
+    console.error("Error adding wall:", err);
+    messageEl.textContent = 'Error submitting wall. Please try again.';
+    messageEl.style.color = 'red';
   }
 });
