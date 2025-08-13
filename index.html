@@ -1,42 +1,53 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+  <meta charset="UTF-8">
   <title>Wall of Humanity Map</title>
   <link rel="stylesheet" href="style.css">
   <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
   <style>
-    #map { height: 90vh; width: 100%; }
     body { margin: 0; font-family: Arial, sans-serif; }
     header { padding: 10px; text-align: center; background: #2c3e50; color: white; }
+    #map { height: 70vh; width: 100%; }
+    #submission-form { display: none; padding: 10px; background: #f4f4f4; }
+    input, button { margin: 5px 0; padding: 5px; width: 100%; max-width: 400px; }
+    button { cursor: pointer; }
+    #form-message { margin-top: 10px; }
   </style>
 </head>
 <body>
   <header>
     <h1>Wall of Humanity Map</h1>
   </header>
+
+  <div style="text-align:center; margin:10px;">
+    <button id="open-form-btn">Contribute a Wall</button>
+  </div>
+
   <div id="map"></div>
 
-  <div id="submission-form" style="padding: 10px;">
-  <h2>Submit a New Wall</h2>
-  <input type="text" id="wall-name" placeholder="Wall Name" required><br>
-  <input type="text" id="wall-address" placeholder="Address"><br>
-  <input type="text" id="wall-city" placeholder="City"><br>
-  <input type="number" id="wall-lat" placeholder="Latitude" step="any" required><br>
-  <input type="number" id="wall-lng" placeholder="Longitude" step="any" required><br>
-  
-  <input type="text" id="contributor-name" placeholder="Your Name"><br>
-  <input type="text" id="contributor-social" placeholder="Instagram/Other handle"><br>
-  <label>
-    <input type="checkbox" id="anonymous"> Submit Anonymously
-  </label><br>
-  
-  <button id="submit-wall">Submit Wall</button>
-  <p id="form-message"></p>
-</div>
+  <div id="submission-form">
+    <h2>Submit a New Wall</h2>
+    <p>Click the button below, then select the location on the map:</p>
+    <button id="select-location-btn">Select Location on Map</button><br>
 
+    <input type="text" id="wall-name" placeholder="Wall Name" required><br>
+    <input type="text" id="wall-address" placeholder="Address"><br>
+    <input type="text" id="wall-city" placeholder="City"><br>
+    <input type="number" id="wall-lat" placeholder="Latitude" step="any" required><br>
+    <input type="number" id="wall-lng" placeholder="Longitude" step="any" required><br>
+
+    <input type="text" id="contributor-name" placeholder="Your Name"><br>
+    <input type="text" id="contributor-social" placeholder="Instagram/Other handle"><br>
+    <label>
+      <input type="checkbox" id="anonymous"> Submit Anonymously
+    </label><br>
+
+    <button id="submit-wall">Submit Wall</button>
+    <p id="form-message"></p>
+  </div>
 
   <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
-  <!-- Firebase + App JS -->
   <script type="module" src="script.js"></script>
 </body>
 </html>

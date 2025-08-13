@@ -1,7 +1,7 @@
 // script.js
 import { getWalls, addWall } from './firebase.js';
 
-// Initialize Leaflet map centered on India
+// Initialize Leaflet map
 const map = L.map('map').setView([20.5937, 78.9629], 5);
 
 // Add OpenStreetMap tiles
@@ -9,7 +9,7 @@ L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
   attribution: '&copy; OpenStreetMap contributors'
 }).addTo(map);
 
-// Display walls on the map
+// Display walls
 async function displayWalls() {
   try {
     const walls = await getWalls();
@@ -28,19 +28,33 @@ async function displayWalls() {
   }
 }
 
-// Call displayWalls after definition
 displayWalls();
 
-// Let user select location on map
-let selectedMarker = null;
-map.on('click', (e) => {
-  const { lat, lng } = e.latlng;
+// Handle opening submission form
+const openFormBtn = document.getElementById('open-form-btn');
+const formDiv = document.getElementById('submission-form');
+openFormBtn.addEventListener('click', () => {
+  formDiv.style.display = 'block';
+  window.scrollTo({ top: formDiv.offsetTop, behavior: 'smooth' });
+});
 
-  // Fill form inputs
+// Map click selection logic
+let selectMode = false;
+let selectedMarker = null;
+
+const selectLocationBtn = document.getElementById('select-location-btn');
+selectLocationBtn.addEventListener('click', () => {
+  selectMode = true;
+  alert("Click on the map to select the wall's location.");
+});
+
+map.on('click', (e) => {
+  if (!selectMode) return;
+
+  const { lat, lng } = e.latlng;
   document.getElementById('wall-lat').value = lat.toFixed(6);
   document.getElementById('wall-lng').value = lng.toFixed(6);
 
-  // Add or move marker on map
   if (selectedMarker) {
     selectedMarker.setLatLng([lat, lng]);
   } else {
@@ -51,6 +65,8 @@ map.on('click', (e) => {
       document.getElementById('wall-lng').value = pos.lng.toFixed(6);
     });
   }
+
+  selectMode = false;
 });
 
 // Form submission
@@ -82,7 +98,7 @@ submitButton.addEventListener('click', async () => {
     anonymous,
     contributorName: anonymous ? null : contributorName || 'N/A',
     contributorSocial: anonymous ? null : contributorSocial || null,
-    status: 'pending' // new submissions are pending approval
+    status: 'pending'
   };
 
   try {
@@ -91,21 +107,15 @@ submitButton.addEventListener('click', async () => {
     messageEl.style.color = 'green';
 
     // Reset form
-    document.getElementById('wall-name').value = '';
-    document.getElementById('wall-address').value = '';
-    document.getElementById('wall-city').value = '';
-    document.getElementById('wall-lat').value = '';
-    document.getElementById('wall-lng').value = '';
-    document.getElementById('contributor-name').value = '';
-    document.getElementById('contributor-social').value = '';
+    ['wall-name','wall-address','wall-city','wall-lat','wall-lng','contributor-name','contributor-social'].forEach(id => {
+      document.getElementById(id).value = '';
+    });
     document.getElementById('anonymous').checked = false;
 
-    // Remove selected marker
     if (selectedMarker) {
       map.removeLayer(selectedMarker);
       selectedMarker = null;
     }
-
   } catch (err) {
     console.error("Error adding wall:", err);
     messageEl.textContent = 'Error submitting wall. Please try again.';
