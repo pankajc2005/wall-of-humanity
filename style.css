@@ -51,7 +51,7 @@ button:hover {
 #submission-form {
   display: none;
   padding: 20px;
-  max-width: 700px;
+  max-width: 500px;
   margin: 20px auto;
   background: #ffffff;
   border-radius: 8px;
@@ -64,64 +64,19 @@ button:hover {
   color: #2c3e50;
 }
 
-/* Form layout */
-.form-grid {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 12px;
-}
-
-.form-row {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 10px;
-}
-
 /* Input fields */
 #submission-form input[type="text"],
-#submission-form input[type="number"],
-#submission-form input[type="file"] {
+#submission-form input[type="number"] {
   width: 100%;
   padding: 10px;
-  margin-top: 5px;
+  margin: 5px 0;
   border-radius: 6px;
   border: 1px solid #ccc;
   font-size: 1rem;
 }
 
-.form-group label {
-  font-size: 0.9rem;
-  color: #555;
-}
-
-.checkbox {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-/* Image preview */
-.image-preview {
-  margin-top: 8px;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.image-preview img {
-  width: 120px;
-  height: 80px;
-  object-fit: cover;
-  border-radius: 6px;
-  border: 1px solid #eee;
-}
-
-.image-preview button {
-  background: #e74c3c;
-}
-
-.image-preview button:hover {
-  background: #c0392b;
+#submission-form input[type="checkbox"] {
+  margin-right: 5px;
 }
 
 /* Form message */
@@ -149,9 +104,5 @@ button:hover {
 
   button {
     width: 100%;
-  }
-
-  .form-row {
-    grid-template-columns: 1fr;
   }
 }

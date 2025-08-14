@@ -4,7 +4,6 @@
 // Import Firebase modules
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
 import { getFirestore, collection, getDocs, addDoc, serverTimestamp, doc, updateDoc, query, where, orderBy } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
-import { getStorage, ref as storageRef, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-storage.js";
 
 // Firebase config (from Firebase console)
 const firebaseConfig = {
@@ -19,7 +18,6 @@ const firebaseConfig = {
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
-const storage = getStorage(app);
 
 export async function getWalls() {
   const wallsCol = collection(db, "walls");
@@ -30,16 +28,6 @@ export async function getWalls() {
 export async function addWall(data) {
   const wallsCol = collection(db, "walls");
   await addDoc(wallsCol, { ...data, status: "pending", timestamp: serverTimestamp() });
-}
-
-// Upload image to Firebase Storage and return URL and storage path
-export async function uploadWallImage(file) {
-  const safeName = file.name.replace(/[^a-zA-Z0-9.\-_/]/g, '_');
-  const filePath = `wall-images/${Date.now()}-${safeName}`;
-  const ref = storageRef(storage, filePath);
-  await uploadBytes(ref, file, { contentType: file.type });
-  const url = await getDownloadURL(ref);
-  return { url, path: filePath };
 }
 
 // Admin functions
