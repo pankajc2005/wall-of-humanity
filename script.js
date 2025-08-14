@@ -1,4 +1,3 @@
-// script.js
 import { getWalls, addWall } from './firebase.js';
 
 // Initialize Leaflet map
@@ -9,10 +8,10 @@ L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
   attribution: '&copy; OpenStreetMap contributors'
 }).addTo(map);
 
-// Display walls
+// Display approved walls
 async function displayWalls() {
   try {
-    const walls = await getWalls();
+    const walls = await getWalls(); // Only approved walls are returned
     walls.forEach(wall => {
       L.marker([wall.lat, wall.lng])
         .addTo(map)
@@ -106,16 +105,20 @@ submitButton.addEventListener('click', async () => {
     messageEl.textContent = 'Wall submitted successfully! Pending approval.';
     messageEl.style.color = 'green';
 
-    // Reset form
+    // Reset form fields
     ['wall-name','wall-address','wall-city','wall-lat','wall-lng','contributor-name','contributor-social'].forEach(id => {
       document.getElementById(id).value = '';
     });
     document.getElementById('anonymous').checked = false;
 
+    // Remove marker if exists
     if (selectedMarker) {
       map.removeLayer(selectedMarker);
       selectedMarker = null;
     }
+
+    // Hide form after submission
+    formDiv.style.display = 'none';
   } catch (err) {
     console.error("Error adding wall:", err);
     messageEl.textContent = 'Error submitting wall. Please try again.';
