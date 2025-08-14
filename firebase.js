@@ -3,7 +3,8 @@
 
 // Import Firebase modules
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
-import { getFirestore, collection, getDocs, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+import { getFirestore, collection, getDocs, addDoc, serverTimestamp, doc, updateDoc, query, where, orderBy } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
+import { getStorage, ref as storageRef, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-storage.js";
 
 // Firebase config (from Firebase console)
 const firebaseConfig = {
@@ -18,6 +19,7 @@ const firebaseConfig = {
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
+const storage = getStorage(app);
 
 export async function getWalls() {
   const wallsCol = collection(db, "walls");
@@ -28,4 +30,50 @@ export async function getWalls() {
 export async function addWall(data) {
   const wallsCol = collection(db, "walls");
   await addDoc(wallsCol, { ...data, status: "pending", timestamp: serverTimestamp() });
+}
+
+// Upload image to Firebase Storage and return URL and storage path
+export async function uploadWallImage(file) {
+  const safeName = file.name.replace(/[^a-zA-Z0-9.\-_/]/g, '_');
+  const filePath = `wall-images/${Date.now()}-${safeName}`;
+  const ref = storageRef(storage, filePath);
+  await uploadBytes(ref, file, { contentType: file.type });
+  const url = await getDownloadURL(ref);
+  return { url, path: filePath };
+}
+
+// Admin functions
+export async function getAllSubmissions() {
+  const wallsCol = collection(db, "walls");
+  const q = query(wallsCol, orderBy("timestamp", "desc"));
+  const snapshot = await getDocs(q);
+  return snapshot.docs.map(doc => ({
+    id: doc.id,
+    ...doc.data()
+  }));
+}
+
+export async function getSubmissionsByStatus(status) {
+  const wallsCol = collection(db, "walls");
+  // Remove orderBy to avoid composite index requirement
+  const q = query(wallsCol, where("status", "==", status));
+  const snapshot = await getDocs(q);
+  const submissions = snapshot.docs.map(doc => ({
+    id: doc.id,
+    ...doc.data()
+  }));
+  
+  // Sort in JavaScript instead
+  return submissions.sort((a, b) => {
+    if (!a.timestamp || !b.timestamp) return 0;
+    return b.timestamp.toDate() - a.timestamp.toDate();
+  });
+}
+
+export async function updateSubmissionStatus(submissionId, newStatus) {
+  const submissionRef = doc(db, "walls", submissionId);
+  await updateDoc(submissionRef, {
+    status: newStatus,
+    reviewedAt: serverTimestamp()
+  });
 }
